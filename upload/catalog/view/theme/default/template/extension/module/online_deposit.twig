@@ -49,53 +49,36 @@
 
                 <div class="custom_deposit_form">
                     <p class="custom_deposit_description">
-                        کاربر گرامی، از طریق فرم زیر می‌توانید به صورت مستقیم به حساب فروشگاه مبلغ دلخواه خود را واریز نمایید. این مبلغ مستقیما به حساب متصل به فروشگاه واریز می‌گردد.
+                        {{ descirption }}
                     </p>
                     <div class="price-list">
-                        <div class="custom_deposit-option">
-                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-1" value="5000000" checked="checked">
-                            <label class="custom_deposit-name" for="custom_deposit_item-1">
-                                <div class="custom_deposit-price">5,000,000<span class="currency_symbol"> تومان</span></div>
-                            </label>
-                        </div>
-                        <div class="custom_deposit-option">
-                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-2" value="10000000">
-                            <label class="custom_deposit-name" for="custom_deposit_item-2">
-                                <div class="custom_deposit-price">10,000,000<span class="currency_symbol"> تومان</span></div>
-                            </label>
-                        </div>
-                        <div class="custom_deposit-option">
-                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-3" value="15000000">
-                            <label class="custom_deposit-name" for="custom_deposit_item-3">
-                                <div class="custom_deposit-price">15,000,000<span class="currency_symbol"> تومان</span></div>
-                            </label>
-                        </div>
-                        <div class="custom_deposit-option">
-                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-4" value="20000000">
-                            <label class="custom_deposit-name" for="custom_deposit_item-4">
-                                <div class="custom_deposit-price">20,000,000<span class="currency_symbol"> تومان</span></div>
-                            </label>
-                        </div>
-                        <div class="custom_deposit-option">
-                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-5" value="30000000">
-                            <label class="custom_deposit-name" for="custom_deposit_item-5">
-                                <div class="custom_deposit-price">30,000,000<span class="currency_symbol"> تومان</span></div>
-                            </label>
-                        </div>
+                        
+                        {% for key,price in price_list %}
+                            <div class="custom_deposit-option">
+                                <input type="radio" name="custom_deposit_item" id="custom_deposit_item-{{key}}" value="{{ price.price }}" checked="checked">
+                                <label class="custom_deposit-name" for="custom_deposit_item-{{key}}">
+                                    
+                                   <div class="custom_deposit-price"> {{ price.text_price }}</div>
+                                </label>
+                            </div>
+                        
+                        {% endfor %}
+                       
                     </div>
-
-                    <div class="custom_deposit-custom_price form-group required row">
-                        <label class="col-md-4 control-label" for="deposit_price">مبلغ را وارد نمایید</label>
-                        <div class="col-md-8">
-                            <input class="form-control" type="number" id="deposit_price" name="deposit_price" value="{{ deposit_price }}" placeholder="">
+                    
+                        <div class="custom_deposit-custom_price form-group required row {{ custom_price == 1 ? '' : ' d-none '}} ">
+                            <label class="col-md-4 control-label" for="deposit_price">مبلغ را وارد نمایید</label>
+                            <div class="col-md-8">
+                                <input class="form-control" type="number" id="deposit_price" name="deposit_price" value="{{ deposit_price }}" placeholder="">
+                            </div>
                         </div>
-                    </div>
+                    
 
                     <div class="totals first">
                         <label>قیمت: </label>
                         <span id="selected_price">--</span>
                     </div>
-                    <div class="totals"><label>مالیات: </label><span id="total_tax">0<span class="currency_symbol"> تومان</span></span></div>
+                    <div class="totals {{ tax_class_id == 0 ? 'd-none' : '' }} "><label>مالیات: </label><span id="total_tax">0<span class="currency_symbol"> تومان</span></span></div>
                     <div class="payment-method">
                         <div class="bank">
                             <label>انتخاب بانک: </label>
@@ -104,7 +87,7 @@
                                     <label class="bank" for="payment-{{payment_method.code}}">
                                         <input type="radio" name="payment_method" value="{{payment_method.code}}" id="payment-{{payment_method.code}}" checked>
                                         <span>{{payment_method.name}}</span>
-                                        <img src="/image/design/icons/payment/saman.png" class="payment-image" alt="">
+                                        <img src="/image/design/icons/payment/{{payment_method.code}}.png" class="payment-image" alt="">
                                     </label>
                                 {% endfor %}
                             </div>
@@ -213,21 +196,23 @@
                             depositPriceInput.value = radio.value;
 
                             // متن نمایشی از لیبل
-                            const priceText = radio.closest(".custom_deposit-option").querySelector(".custom_deposit-price").innerHTML;
+                            // const priceText = radio.closest(".custom_deposit-option").querySelector(".custom_deposit-price").innerHTML;
 
-                            selectedPrice.innerHTML = priceText;
-                            finalPrice.innerHTML = priceText;
+                            // selectedPrice.innerHTML = priceText;
+                            // finalPrice.innerHTML = priceText;
                         } else {
-                            depositPriceInput.value = 0;
-                            selectedPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
-                            finalPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                            // depositPriceInput.value = 0;
+                            // selectedPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                            // finalPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
                         }
+                        
+                        update_tax()
                     }
 
                     // بارگذاری اولیه → مقدار پیش‌فرض
                     const defaultChecked = document.querySelector("input[name='custom_deposit_item']:checked");
                     updateValues(defaultChecked);
-
+                    
                     // وقتی روی هر رادیو کلیک شد
                     radios.forEach(radio => {
                         radio.addEventListener("change", function () {
@@ -239,19 +224,49 @@
                     depositPriceInput.addEventListener("input", function () {
                         let customValue = this.value;
                         if (customValue && customValue > 0) {
-                            const formatted = new Intl.NumberFormat('fa-IR').format(customValue) + '<span class="currency_symbol"> تومان</span>';
+                            // const formatted = new Intl.NumberFormat('fa-IR').format(customValue) + '<span class="currency_symbol"> تومان</span>';
 
-                            selectedPrice.innerHTML = formatted;
-                            finalPrice.innerHTML = formatted;
+                            // selectedPrice.innerHTML = formatted;
+                            // finalPrice.innerHTML = formatted;
 
                             // همه رادیوها از انتخاب خارج شوند
                             radios.forEach(radio => radio.checked = false);
                         } else {
-                            selectedPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
-                            finalPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                            // selectedPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                            // finalPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
                         }
+                        
+                        
+                        update_tax()
                     });
                 });
+                
+                
+                
+                function update_tax() {
+                    $('.custom_deposit-button').attr('disabled' , true)
+                    const deposit_price =  document.getElementById('deposit_price').value;
+                    if(deposit_price <= 0 || deposit_price == '' || deposit_price == null || !deposit_price || deposit_price[0] == 0) {
+                        alert('خطا')
+                    } else {
+                        _ajax.post('index.php?route=account/online_deposit/update_tax', {
+                            deposit_price: deposit_price
+                        })
+                            .then(response => {
+                                if(response.text_tax) {
+                                    $('#total_tax').html(response.text_tax)
+                                    $('#selected_price').html(response.text_price)
+                                    $('#final-price').html(response.text_total)
+                                }
+                                
+                                $('.custom_deposit-button').attr('disabled' , false)
+                              
+                            })
+                            .catch(error => console.error('Error:', error));
+                    }
+                    
+                    
+                }
             </script>
 
 
