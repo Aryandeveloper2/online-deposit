@@ -1,3 +1,305 @@
-123
+{{ header }}
+<div id="account-account" class="container">
+    <nav class="breadcrumb-wrap" aria-label="breadcrumb">
+        <ul class="breadcrumb container">
+            {% for breadcrumb in breadcrumbs %}
+                <li><a href="{{ breadcrumb.href }}">{{ breadcrumb.text }}</a></li>
+            {% endfor %}
+        </ul>
+    </nav>
+    <div class="row">{{ column_left }}
+        {% if column_left and column_right %}
+            {% set class = 'col-sm-6' %}
+        {% elseif column_left or column_right %}
+            {% set class = 'col-sm-9' %}
+        {% else %}
+            {% set class = 'col-sm-12' %}
+        {% endif %}
+        <div id="content" class="{{ class }}">{{ content_top }}
+            {% if success %}
+                <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}</div>
+            {% endif %}
 
-{{ heading_title }}
+            <div class="dasboard-head">
+                {#<h1>{{ heading_title }}</h1>#}
+                <div class="btns" style="margin-right:auto;">
+                    <a class="btn-logout"  href="{{ logout }}" data-toggle="tooltip" title="" data-original-title="{{ text_logout }}">
+                        <i class="fa fa-power-off" aria-hidden="true"></i>
+                    </a>
+                    <button class="open-column" type="button"  id="show-aside" data-bs-toggle="offcanvas" data-bs-target="#left-column" aria-controls="left-column">
+                        <i class="fa fa-bars" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="main-content account-box">
+                <div class="head-sec">
+                    <h2 class="flex-center">
+                        <svg class="bi" fill="currentColor"><use xlink:href="#order-icon"></use></svg>
+                        <span class="mr-3">{{ heading_title }}</span>
+                    </h2>
+                </div>
+
+                <form id="MellatPayment" name="mellat" action="https://bpm.shaparak.ir/pgwchannel/startpay.mellat" method="POST">
+                    <input type="hidden" id="RefId" name="RefId" value="">
+                </form>
+                <form id="SamanPayment" name="saman" action="https://sep.shaparak.ir/Payment.aspx" method="post">
+                    <input type="hidden" name="Token" value="{{ Token }}" />
+                    <input type="hidden" name="RedirectURL" value="{{ RedirectURL }}" />
+                </form>
+
+                <div class="custom_deposit_form">
+                    <p class="custom_deposit_description">
+                        کاربر گرامی، از طریق فرم زیر می‌توانید به صورت مستقیم به حساب فروشگاه مبلغ دلخواه خود را واریز نمایید. این مبلغ مستقیما به حساب متصل به فروشگاه واریز می‌گردد.
+                    </p>
+                    <div class="price-list">
+                        <div class="custom_deposit-option">
+                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-1" value="5000000" checked="checked">
+                            <label class="custom_deposit-name" for="custom_deposit_item-1">
+                                <div class="custom_deposit-price">5,000,000<span class="currency_symbol"> تومان</span></div>
+                            </label>
+                        </div>
+                        <div class="custom_deposit-option">
+                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-2" value="10000000">
+                            <label class="custom_deposit-name" for="custom_deposit_item-2">
+                                <div class="custom_deposit-price">10,000,000<span class="currency_symbol"> تومان</span></div>
+                            </label>
+                        </div>
+                        <div class="custom_deposit-option">
+                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-3" value="15000000">
+                            <label class="custom_deposit-name" for="custom_deposit_item-3">
+                                <div class="custom_deposit-price">15,000,000<span class="currency_symbol"> تومان</span></div>
+                            </label>
+                        </div>
+                        <div class="custom_deposit-option">
+                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-4" value="20000000">
+                            <label class="custom_deposit-name" for="custom_deposit_item-4">
+                                <div class="custom_deposit-price">20,000,000<span class="currency_symbol"> تومان</span></div>
+                            </label>
+                        </div>
+                        <div class="custom_deposit-option">
+                            <input type="radio" name="custom_deposit_item" id="custom_deposit_item-5" value="30000000">
+                            <label class="custom_deposit-name" for="custom_deposit_item-5">
+                                <div class="custom_deposit-price">30,000,000<span class="currency_symbol"> تومان</span></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="custom_deposit-custom_price form-group required row">
+                        <label class="col-md-4 control-label" for="deposit_price">مبلغ را وارد نمایید</label>
+                        <div class="col-md-8">
+                            <input class="form-control" type="number" id="deposit_price" name="deposit_price" value="{{ deposit_price }}" placeholder="">
+                        </div>
+                    </div>
+
+                    <div class="totals first">
+                        <label>قیمت: </label>
+                        <span id="selected_price">--</span>
+                    </div>
+                    <div class="totals"><label>مالیات: </label><span id="total_tax">0<span class="currency_symbol"> تومان</span></span></div>
+                    <div class="payment-method">
+                        <div class="bank">
+                            <label>انتخاب بانک: </label>
+                            <div class="bank-items">
+                                {% for payment_method in payment_methods %}
+                                    <label class="bank" for="payment-{{payment_method.code}}">
+                                        <input type="radio" name="payment_method" value="{{payment_method.code}}" id="payment-{{payment_method.code}}" checked>
+                                        <span>{{payment_method.name}}</span>
+                                        <img src="/image/design/icons/payment/saman.png" class="payment-image" alt="">
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="final">
+                            <div class="final_pay">
+                                <label>مبلغ قابل پرداخت: </label>
+                                <div id="final-price" class="final-price">--</div>
+                            </div>
+                            <form action="https://bpm.shaparak.ir/pgwchannel/startpay.mellat" method="post" class="form-horizontal">
+                                <input type="hidden" id="ref_id" name="RefId" value="">
+                                <button type="button" class="btn btn-primary btn-online_deposit-pay custom_deposit-button">ثبت و پرداخت</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        {% if deposit_price_status %}
+                        var modalElement = document.getElementById('online_depositCharging');
+                        var modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                        {% endif %}
+
+                        $('#input-deposit_status').on('change', function() {
+                            let status = $(this).val()
+
+                            $('.custom_deposit_order_list').html(`
+                        <div class="w-100">
+                        لطفا منتظر بمانید...
+                        </div>`)
+                            _ajax.get('index.php?route=account/online_deposit/filter&status=' +status , { })
+                                .then(response => {
+                                    console.log(response)
+                                    if(response.online_deposits) {
+                                        let html = ''
+                                        response.online_deposits.map((deposit , index ) => {
+                                            html += `
+                                        <div class="custom_deposit_row d-flex alert ${deposit.status == 2 ? '  alert-success ' : ' alert-danger'} ">
+                                        <span class="tracking_number w-100">${ deposit.customer_online_deposit_id }</span>
+                                        <span class="total_price w-100">${ deposit.price }</span>
+                                        <span class="status w-100">
+                                        ${deposit.status == 2 ? '  موفق ' : 'ناموفق'}
+                                        </span>
+                                        <span class="text_date w-100">${ deposit.date_added }</span>
+                                        </div>`})
+
+                                        if(html == '') {
+                                            $('.custom_deposit_order_list').html(`
+                                            <div class="w-100">
+                                            هیچ تراکنشی انجام ندادید
+                                            </div>`)
+                                        } else {
+                                            $('.custom_deposit_order_list').html(html)
+                                        }
+                                    }
+                                })
+                                .catch(error => console.error('Error:', error));
+                        })
+
+                        const buttons = document.querySelector('.btn-online_deposit-pay');
+                        buttons.addEventListener('click', function() {
+                            const deposit_price =  document.getElementById('deposit_price').value;
+                            const payment_method =  document.querySelector('input[name="payment_method"]:checked').value;
+                            if(deposit_price <= 0 || deposit_price == '' || deposit_price == null || !deposit_price || deposit_price[0] == 0) {
+                                alert('خطا')
+                            } else {
+                                _ajax.post('index.php?route=account/online_deposit/payment', {
+                                    deposit_price: deposit_price
+                                    ,payment_method: payment_method
+                                })
+                                    .then(response => {
+                                        console.log(response)
+                                        switch(payment_method) {
+                                            case 'saman' :
+                                                if(response.token) {
+                                                    $(`#SamanPayment input[name="Token"]`).val(response.token)
+                                                    $(`#SamanPayment input[name="RedirectURL"]`).val(response.redirect_url)
+                                                    $(`#SamanPayment`).submit();
+                                                }
+                                                break;
+                                        }
+                                        // alert('خطا در پرداخت')
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                            }
+                        });
+                    });
+                </script>
+                {{ content_bottom }}</div>
+
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const radios = document.querySelectorAll("input[name='custom_deposit_item']");
+                    const depositPriceInput = document.getElementById("deposit_price");
+                    const finalPrice = document.getElementById("final-price");
+                    const selectedPrice = document.getElementById("selected_price");
+                    const totalTax = document.getElementById("total_tax"); // فعلاً صفره
+
+                    // تابع برای آپدیت مقادیر
+                    function updateValues(radio) {
+                        if (radio && radio.checked) {
+                            depositPriceInput.value = radio.value;
+
+                            // متن نمایشی از لیبل
+                            const priceText = radio.closest(".custom_deposit-option").querySelector(".custom_deposit-price").innerHTML;
+
+                            selectedPrice.innerHTML = priceText;
+                            finalPrice.innerHTML = priceText;
+                        } else {
+                            depositPriceInput.value = 0;
+                            selectedPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                            finalPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                        }
+                    }
+
+                    // بارگذاری اولیه → مقدار پیش‌فرض
+                    const defaultChecked = document.querySelector("input[name='custom_deposit_item']:checked");
+                    updateValues(defaultChecked);
+
+                    // وقتی روی هر رادیو کلیک شد
+                    radios.forEach(radio => {
+                        radio.addEventListener("change", function () {
+                            updateValues(this);
+                        });
+                    });
+
+                    // اگر کاربر دستی وارد کرد
+                    depositPriceInput.addEventListener("input", function () {
+                        let customValue = this.value;
+                        if (customValue && customValue > 0) {
+                            const formatted = new Intl.NumberFormat('fa-IR').format(customValue) + '<span class="currency_symbol"> تومان</span>';
+
+                            selectedPrice.innerHTML = formatted;
+                            finalPrice.innerHTML = formatted;
+
+                            // همه رادیوها از انتخاب خارج شوند
+                            radios.forEach(radio => radio.checked = false);
+                        } else {
+                            selectedPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                            finalPrice.innerHTML = "0<span class='currency_symbol'> تومان</span>";
+                        }
+                    });
+                });
+            </script>
+
+
+
+            <div class="account-box mt-5 deposit-list">
+                <div class="head-sec">
+                    <h2 class="flex-center">
+                        <svg class="bi" fill="currentColor"><use xlink:href="#order-icon"></use></svg>
+                        <span class="mr-3">تاریخچه تراکنش‌ها</span>
+                        {% if online_deposits %}
+                            <select name="deposit_status" id="input-deposit_status" class="form-control input-status" style="width:150px">
+                                <option value="-1" selected="selected">نمایش‌همه</option>
+                                <option value="2">پرداخت‌های موفق</option>
+                                <option value="1">پرداخت‌های ناموفق</option>
+                            </select>
+                        {% endif %}
+                    </h2>
+                </div>
+                {% if online_deposits %}
+                    <div class="table-responsive">
+                        <div class="heading d-flex">
+                            <span class="tracking_number w-100">شناسه تراکنش</span>
+                            <span class="total_price w-100">مبلغ تراکنش</span>
+                            <span class="status w-100">وضعیت تراکنش</span>
+                            <span class="text_date w-100">زمان تراکنش</span>
+                        </div>
+                        <div class="custom_deposit_order_list">
+                            {% for deposit in online_deposits %}
+                                <div class="custom_deposit_row d-flex alert {% if deposit.status == 2 %} alert-success {% else %}  alert-danger  {% endif %}">
+                                    <span class="tracking_number w-100">{{ deposit.customer_online_deposit_id }}</span>
+                                    <span class="total_price w-100">{{ deposit.price }}</span>
+                                    <span class="status w-100">
+                                        {% if deposit.status == 2 %}موفق{% else %}ناموفق{% endif %}
+                                    </span>
+                                    <span class="text_date w-100">{{ deposit.date_added }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty_order">
+                        <div><svg class="bi" fill="currentColor"><use xlink:href="image/design/icons/account.svg#empty-order-icon"></use></svg></div>
+                        <p>هیچ تراکنشی ثبت نشده است</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {{ column_right }}</div>
+    {% include 'default/template/extension/component/schema/breadcrumb_list.twig' %}
+</div>
+{{ footer }}
