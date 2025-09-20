@@ -38,6 +38,28 @@ class ControllerAccountOnlineDeposit extends Controller {
         $online_deposit_setting = $this->config->get('online_deposit');  
         $data['tax_class_id'] = (int)$online_deposit_setting['tax_class_id'];
         
+        
+        if(isset($this->request->get['s']) && isset($this->request->get['p'])) {
+            $sig = $this->request->get['s'];
+            $price = $this->request->get['p'];
+            
+            $expected = hash_hmac('sha256', $price, "Test");
+            $is_correct = hash_equals($expected, $sig);
+            if($is_correct) {
+                $data['sig'] =$sig;
+                $data['selected_price'] =$price;
+                $data['text_selected_price'] = $this->currency->format(
+    					$this->tax->calculate($price,
+    					(int)$online_deposit_setting['tax_class_id'],
+    					$this->config->get('config_tax'))
+    					 , $this->session->data['currency']);
+                
+                
+            }
+            
+        }
+        
+        
         if($online_deposit_setting['display_module_description'] == 1) {
             $language_id = (int)$this->config->get('config_language_id');
             $data['descirption'] = $online_deposit_setting['description'][$language_id];
@@ -276,13 +298,10 @@ class ControllerAccountOnlineDeposit extends Controller {
                 'status' =>0,
                 'payment_method' => 'saman',
                 'price' => $this->session->data['deposit_price'],
+                'signature' => isset($this->request->post['sig']) ? $this->request->post['sig'] : '',
+
             ]);
                 
-
-
-
-
-
             $total = $this->session->data['deposit_price'];
             $total = $total * 10;
 

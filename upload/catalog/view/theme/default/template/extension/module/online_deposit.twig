@@ -51,6 +51,7 @@
                     <p class="custom_deposit_description">
                         {{ descirption }}
                     </p>
+                    {% if not selected_price %}
                     <div class="price-list">
                         
                         {% for key,price in price_list %}
@@ -72,11 +73,13 @@
                                 <input class="form-control" type="number" id="deposit_price" name="deposit_price" value="{{ deposit_price }}" placeholder="">
                             </div>
                         </div>
+                        
+                    {% endif %}
                     
 
                     <div class="totals first">
                         <label>قیمت: </label>
-                        <span id="selected_price">--</span>
+                        <span id="selected_price">{{selected_price ? text_selected_price : '--'}}</span>
                     </div>
                     <div class="totals {{ tax_class_id == 0 ? 'd-none' : '' }} "><label>مالیات: </label><span id="total_tax">0<span class="currency_symbol"> تومان</span></span></div>
                     <div class="payment-method">
@@ -96,7 +99,7 @@
                         <div class="final">
                             <div class="final_pay">
                                 <label>مبلغ قابل پرداخت: </label>
-                                <div id="final-price" class="final-price">--</div>
+                                <div id="final-price" class="final-price">{{selected_price ? text_selected_price : '--'}}</div>
                             </div>
                             <form action="https://bpm.shaparak.ir/pgwchannel/startpay.mellat" method="post" class="form-horizontal">
                                 <input type="hidden" id="ref_id" name="RefId" value="">
@@ -152,7 +155,13 @@
 
                         const buttons = document.querySelector('.btn-online_deposit-pay');
                         buttons.addEventListener('click', function() {
+                            {% if selected_price %}
+                            
+                            const deposit_price =  {{selected_price}};
+                            {% else %}
                             const deposit_price =  document.getElementById('deposit_price').value;
+                            
+                            {% endif %}
                             const payment_method =  document.querySelector('input[name="payment_method"]:checked').value;
                             if(deposit_price <= 0 || deposit_price == '' || deposit_price == null || !deposit_price || deposit_price[0] == 0) {
                                 alert('خطا')
@@ -160,6 +169,12 @@
                                 _ajax.post('index.php?route=account/online_deposit/payment', {
                                     deposit_price: deposit_price
                                     ,payment_method: payment_method
+                                     {% if selected_price %}
+                                     , selected_price: true
+                                     , sig: "{{ sig }}"
+                                    {% endif %}
+                                    
+                                    
                                 })
                                     .then(response => {
                                         console.log(response)
@@ -208,7 +223,8 @@
                         
                         update_tax()
                     }
-
+                    
+                    {% if not selected_price %}
                     // بارگذاری اولیه → مقدار پیش‌فرض
                     const defaultChecked = document.querySelector("input[name='custom_deposit_item']:checked");
                     updateValues(defaultChecked);
@@ -219,7 +235,8 @@
                             updateValues(this);
                         });
                     });
-
+                    
+                  
                     // اگر کاربر دستی وارد کرد
                     depositPriceInput.addEventListener("input", function () {
                         let customValue = this.value;
@@ -239,13 +256,21 @@
                         
                         update_tax()
                     });
+                    
+                    {% endif %}
                 });
                 
                 
                 
                 function update_tax() {
                     $('.custom_deposit-button').attr('disabled' , true)
+                    {% if selected_price %}
+                    
+                    const deposit_price =  {{selected_price}};
+                    {% else %}
                     const deposit_price =  document.getElementById('deposit_price').value;
+                    
+                    {% endif %}
                     if(deposit_price <= 0 || deposit_price == '' || deposit_price == null || !deposit_price || deposit_price[0] == 0) {
                         alert('خطا')
                     } else {

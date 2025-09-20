@@ -8,6 +8,9 @@
                 <li class="active"><a href="#general"  data-toggle="tab">
                 عمومی
                 </a></li>
+                <li><a href="#glink"  data-toggle="tab">
+                ساخت لینک پرداخت
+                </a></li>
                 <li><a href="#transactions" data-toggle="tab">
                     
                     تراکنش‌ها
@@ -19,6 +22,8 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="general">
                     {{ main_sub_module_form }}
+                    
+                  
                     
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="input-custom_price">
@@ -159,6 +164,44 @@
                       </div>
                 </div>
                 
+                <div class="tab-pane" id="glink">
+                      <div class="form-group">
+                        <label class="col-sm-2 control-label" for="generate_link">
+                            قیمت
+                        </label>
+                        <div class="col-sm-10 d-flex">
+                            <input type="number" id="generate_link" class="form-control ml-3" placeholder="قیمت">
+                            <button type="button" class="btn btn-primary" onClick="generateLink()">ساخت لینک</button>
+                        </div>
+                        
+                        <script>
+                            function generateLink() {
+                                let price = $('#generate_link').val()
+                                
+                                 $.ajax({
+                                      url: 'index.php?route=extension/module/online_deposit/generateLink',
+                                      type: 'get',
+                                      dataType: 'json',
+                                      data:'user_token={{ user_token }}&price='+ price,
+                                      beforeSend: function() {},
+                                      success: function(response) {
+                                             navigator.clipboard.writeText(response.sig)
+                                            .then(() => {
+                                                alert("متن کپی شد ✅");
+                                            })
+                                            .catch(err => {
+                                                alert("خطا در کپی!");
+                                                console.error(err);
+                                            });
+                                      },
+                                      error: function() {}
+                                  });
+                          
+                            }
+                        </script>
+                      </div>
+                </div>
+                
                 <div class="tab-pane" id="transactions">
                     
                     <div class="table-responsive">
@@ -175,7 +218,7 @@
                         <tbody>
                         {% if online_deposits %}
                             {% for online_deposit in online_deposits %}
-                                <tr>
+                                <tr class="{{online_deposit.signature != '' ? 'bg-info' : ''}}">
                                     <td class="text-center">{{online_deposit.fullname}}</td>
                                     <td class="text-left">{{ online_deposit.price }}</td>
                                     <td class="text-right">{{ online_deposit.payment_method }}</td>

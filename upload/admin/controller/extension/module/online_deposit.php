@@ -199,4 +199,27 @@ class ControllerExtensionModuleOnlineDeposit extends Controller {
 		return !$this->error;
 	}
 	
+	public function generateLink() {
+	    
+	    if(isset($this->request->get['price'])) {
+	        $price = (float)$this->request->get['price'];
+	         
+    	    $sig = hash_hmac('sha256', $price, "Test");
+    	    
+    	    
+    	    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' 
+             || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+
+            $host = $_SERVER['HTTP_HOST'];
+            
+            $base_url = $protocol . $host;
+            
+            $json['sig'] = $base_url. '/account/online_deposit/?s=' . $sig . '&p=' .$price;
+	    }
+	   
+    
+	    $this->response->addHeader('Content-Type: application/json');
+		$this->response->setOutput(json_encode($json));
+	}
+	
 }
