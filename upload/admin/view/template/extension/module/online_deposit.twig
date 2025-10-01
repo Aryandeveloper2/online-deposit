@@ -219,7 +219,11 @@
                         {% if online_deposits %}
                             {% for online_deposit in online_deposits %}
                                 <tr class="{{online_deposit.signature != '' ? 'bg-info' : ''}}">
-                                    <td class="text-center">{{online_deposit.fullname}}</td>
+                                    <td class="text-center">
+                                            <a href="{{ online_deposit.customer}}" target="_blank">
+                                                {{online_deposit.fullname != '' ? online_deposit.fullname : online_deposit.customer_id }}
+                                            </a>
+                                    </td>
                                     <td class="text-left">{{ online_deposit.price }}</td>
                                     <td class="text-right">{{ online_deposit.payment_method }}</td>
                                     <td class="text-right">{{ online_deposit.status == 2 ? 'پرداخت موفق': 'پرداخت ناموفق' }}</td>

@@ -1,7 +1,19 @@
 <?php
 class ControllerAccountOnlineDeposit extends Controller {
 	private $error = array();
+    
+     public function online_deposit_log() {
+        $logFile = DIR_LOGS . 'online_deposit.log';
+        
+        if (!file_exists($logFile)) {
+            // ایجاد فایل با محتوای خالی
+            touch($logFile);
+        }
 
+	    return new Log('online_deposit.log');
+    }
+    
+    
 	public function index() {
 		if (!$this->customer->isLogged()) {
 			$this->session->data['redirect'] = $this->url->link('account/edit', '', true);
@@ -33,6 +45,9 @@ class ControllerAccountOnlineDeposit extends Controller {
 		$this->load->model('setting/extension');
         
         
+
+        $data['firstname'] = $this->customer->getFirstname();
+        $data['lastname'] = $this->customer->getLastname();
         
                 
         $online_deposit_setting = $this->config->get('online_deposit');  
@@ -46,6 +61,7 @@ class ControllerAccountOnlineDeposit extends Controller {
             $expected = hash_hmac('sha256', $price, "Test");
             $is_correct = hash_equals($expected, $sig);
             if($is_correct) {
+              
                 $data['sig'] =$sig;
                 $data['selected_price'] =$price;
                 $data['text_selected_price'] = $this->currency->format(
@@ -135,7 +151,22 @@ class ControllerAccountOnlineDeposit extends Controller {
         /*--  End - SO Dashboard --*/
 
         $data['logout'] = $this->url->link('account/logout', '', true);
-
+        
+        if(isset($this->session->data['verify_success']) && isset($this->session->data['success'])) {
+            $data['verify_success'] = $this->session->data['verify_success'];
+            $data['success'] = $this->session->data['success'];
+            $data['back'] =  $this->url->link('account/online_deposit', '', true);
+            
+            // var_dump( $this->session->data['success']);
+            unset($this->session->data['verify_success']);
+            unset($this->session->data['success']);
+            
+        	$this->response->setOutput($this->load->view('account/payment_success', $data));
+        	return false;
+        }
+        
+        
+        
 		$this->response->setOutput($this->load->view('extension/module/online_deposit', $data));
 	}
 
@@ -204,8 +235,7 @@ class ControllerAccountOnlineDeposit extends Controller {
             
             $online_deposit_setting = $this->config->get('online_deposit');  
 
-
-	
+    
 	
             
             $total = $this->tax->calculate(
@@ -264,6 +294,10 @@ class ControllerAccountOnlineDeposit extends Controller {
             $online_deposit_setting = $this->config->get('online_deposit');  
 
 
+	        if(isset($this->request->post['firstname']) && isset($this->request->post['lastname'])) {
+                   $this->session->data['deposit_firstname']  = $this->request->post['firstname'];
+                   $this->session->data['deposit_lastname']   = $this->request->post['lastname'];
+            }
 	
 	
             
@@ -298,10 +332,17 @@ class ControllerAccountOnlineDeposit extends Controller {
                 'status' =>0,
                 'payment_method' => 'saman',
                 'price' => $this->session->data['deposit_price'],
+                'firstname' => isset($this->session->data['deposit_firstname']) ? $this->session->data['deposit_firstname'] : '',
+                'lastname' => isset($this->session->data['deposit_lastname']) ? $this->session->data['deposit_lastname'] : '',
                 'signature' => isset($this->request->post['sig']) ? $this->request->post['sig'] : '',
 
             ]);
                 
+
+
+
+
+
             $total = $this->session->data['deposit_price'];
             $total = $total * 10;
 
@@ -326,7 +367,7 @@ class ControllerAccountOnlineDeposit extends Controller {
     
 	public function callback_online_deposit()
 	{
-	
+	    $online_deposit_log = $this->online_deposit_log();
 	    $this->load->model('account/online_deposit');
 		if ($this->request->get['shf_key']) {
 			$this->session->start($this->request->get['shf_key']);
@@ -348,22 +389,28 @@ class ControllerAccountOnlineDeposit extends Controller {
 			$ResNum  = isset($_POST['ResNum'])  ? $_POST['ResNum']  : 0;
 			$TraceNo = isset($_POST['TRACENO']) ? $_POST['TRACENO'] : 0;
 			$ScrPan  = isset($_POST['SecurePan']) ? $_POST['SecurePan'] : 0;
-			$msg = "State : $State , ResNum : $ResNum";
-			if ($RefNum)  $msg .= " , RefNum : $RefNum";
-			if ($TraceNo) $msg .= " , TraceNo : $TraceNo";
-			if ($MID)     $msg .= " , MID : $MID";
-			if ($CID)     $msg .= " , CID : $CID";
-			if ($RRN)     $msg .= " , RRN : $RRN";
-			if ($ScrPan)  $msg .= " , ScrPan : $ScrPan";
+			
+			$msg = "شماره پیگیری خرید: $TraceNo";
+			
+			$log_msg = "State : $State";
+			if ($RefNum)  $log_msg .= "RefNum : $RefNum";
+			if ($ResNum) $log_msg .= " | ResNum: $ResNum";
+			if ($MID)     $log_msg .= " | MID: $MID";
+			if ($CID)     $log_msg .= " | CID: $CID";
+			if ($RRN)     $log_msg .= " | RRN: $RRN";
+			if ($ScrPan)  $log_msg .= " | ScrPan: $ScrPan";
+			
 			if ($this->config->get('payment_saman_debug'))
 			{
-				$this->log->write('Saman :: customer_online_deposit_id='.$customer_online_deposit_id.' :: POST='.implode($this->request->post).' :: GET='.implode($this->request->get));
+				$online_deposit_log->write('Saman :: customer_online_deposit_id='. $customer_online_deposit_id.' :: POST='.implode($this->request->post).' :: GET='.implode($this->request->get));
+				$online_deposit_log->write('Saman :: customer_online_deposit_id='. $customer_online_deposit_id.' :: Transaction Information: '.$log_msg);
+
 			}
 			if (strtolower($State) != 'ok')
 			{
 				if ($this->config->get('payment_saman_debug'))
 				{
-					$this->log->write(' Saman :: customer_online_deposit_id= '.$customer_online_deposit_id.' :: pay cancelled :: State='.$State);
+					$online_deposit_log->write(' Saman :: customer_online_deposit_id= '.$customer_online_deposit_id.' :: pay cancelled :: State='.$State);
 				}
 			}
 			else
@@ -377,12 +424,17 @@ class ControllerAccountOnlineDeposit extends Controller {
 					if ($result > 0 && intval($result) == intval($total))
 					{
 						$ok = true;
+						
+					    $this->load->language('account/online_deposit');
+
+			            $this->session->data['success'] = $this->language->get('payment_success');
+			            $this->session->data['verify_success'] = $TraceNo;
 					}
 					else
 					{
 						if ($this->config->get('payment_saman_debug'))
 						{
-							$this->log->write('Saman :: customer_online_deposit_id='.$customer_online_deposit_id.' :: error in verify='.$result);
+							$online_deposit_log->write('Saman :: customer_online_deposit_id='.$customer_online_deposit_id.' :: error in verify='.$result);
 						}
 					}
 				}
@@ -396,6 +448,7 @@ class ControllerAccountOnlineDeposit extends Controller {
 
 			if ($ok == true) {
 			    $this->model_account_online_deposit->editStatusOnlineDeposit($customer_online_deposit_id , 2 );
+	    
 				header('location: '.$this->url->link('account/online_deposit'));
 			} else {
 			    $this->model_account_online_deposit->editStatusOnlineDeposit($customer_online_deposit_id , 1 );

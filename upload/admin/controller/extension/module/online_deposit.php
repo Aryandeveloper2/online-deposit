@@ -127,9 +127,11 @@ class ControllerExtensionModuleOnlineDeposit extends Controller {
         
         foreach($online_deposits as $key=> $deposit) {
            $data['online_deposits'][$key] = $deposit;
-           
+            
            $timestamp = strtotime($deposit['date_added']);
            $data['online_deposits'][$key]['date_added'] = jdate('Y/m/d H:i:s', $timestamp);   
+           $data['online_deposits'][$key]['fullname'] = trim($deposit['fullname']);   
+           $data['online_deposits'][$key]['customer'] = $this->url->link('customer/customer/edit', 'user_token=' . $this->session->data['user_token'] . '&customer_id=' . $deposit['customer_id'], true);
            
            
              $data['online_deposits'][$key]['price'] = $this->currency->format($deposit['price'], $this->session->data['currency']);
@@ -175,6 +177,7 @@ class ControllerExtensionModuleOnlineDeposit extends Controller {
     
   
 		$data['main_sub_module_form'] = $this->load->controller('extension/component/main_sub_module_form', $data);
+		$this->load->language('extension/module/online_deposit');
 
 		$data['user_token'] =$this->session->data['user_token'];
 		$data['header'] = $this->load->controller('common/header');

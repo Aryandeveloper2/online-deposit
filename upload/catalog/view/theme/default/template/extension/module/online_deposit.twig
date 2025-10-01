@@ -16,9 +16,7 @@
             {% set class = 'col-sm-12' %}
         {% endif %}
         <div id="content" class="{{ class }}">{{ content_top }}
-            {% if success %}
-                <div class="alert alert-success alert-dismissible"><i class="fa fa-check-circle"></i> {{ success }}</div>
-            {% endif %}
+            
 
             <div class="dasboard-head">
                 {#<h1>{{ heading_title }}</h1>#}
@@ -76,7 +74,22 @@
                         
                     {% endif %}
                     
-
+                    <div class="d-flex">
+                        <div class="form-group  w-100 required">
+                            <label class="control-label" for="input-firstname">نام</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="firstname" value="{{ firstname }}"  class="form-control" />
+                            </div>
+                        </div>
+                        <div class="form-group w-100 required">
+                            <label class="control-label" for="input-lastname">نام خانوادگی</label>
+                            <div class="col-sm-10">
+                                <input type="text" id="lastname"  value="{{ lastname }}"   class="form-control" />
+                            </div>
+                        </div>
+                    </div>
+                
+                    
                     <div class="totals first">
                         <label>قیمت: </label>
                         <span id="selected_price">{{selected_price ? text_selected_price : '--'}}</span>
@@ -112,9 +125,9 @@
                 <script>
                     document.addEventListener("DOMContentLoaded", function() {
                         {% if deposit_price_status %}
-                        var modalElement = document.getElementById('online_depositCharging');
-                        var modal = new bootstrap.Modal(modalElement);
-                        modal.show();
+                            var modalElement = document.getElementById('online_depositCharging');
+                            var modal = new bootstrap.Modal(modalElement);
+                            modal.show();
                         {% endif %}
 
                         $('#input-deposit_status').on('change', function() {
@@ -155,23 +168,43 @@
 
                         const buttons = document.querySelector('.btn-online_deposit-pay');
                         buttons.addEventListener('click', function() {
+                            const firstname = $('#firstname').val()
+                                if(firstname == '') {
+                                    $('#firstname').addClass('is-invalid')
+                                    return false
+                                }
+                                
+                                const lastname = $('#lastname').val()
+                                if(lastname == '') {
+                                    $('#lastname').addClass('is-invalid')
+                                    return false
+                                }
+                                
+                                 $('#lastname').removeClass('is-invalid')
+                                 
                             {% if selected_price %}
-                            
-                            const deposit_price =  {{selected_price}};
+                                
+                                const deposit_price =  {{selected_price}};
+                                
                             {% else %}
-                            const deposit_price =  document.getElementById('deposit_price').value;
+                            
+                                const deposit_price = document.getElementById('deposit_price').value;
                             
                             {% endif %}
-                            const payment_method =  document.querySelector('input[name="payment_method"]:checked').value;
+                            const payment_method = document.querySelector('input[name="payment_method"]:checked').value;
+                            
                             if(deposit_price <= 0 || deposit_price == '' || deposit_price == null || !deposit_price || deposit_price[0] == 0) {
                                 alert('خطا')
                             } else {
                                 _ajax.post('index.php?route=account/online_deposit/payment', {
                                     deposit_price: deposit_price
-                                    ,payment_method: payment_method
+                                    ,payment_method: payment_method,
+                                     firstname,
+                                     lastname
                                      {% if selected_price %}
                                      , selected_price: true
                                      , sig: "{{ sig }}"
+                                    
                                     {% endif %}
                                     
                                     
