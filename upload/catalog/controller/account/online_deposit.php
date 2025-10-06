@@ -16,10 +16,18 @@ class ControllerAccountOnlineDeposit extends Controller {
     
 	public function index() {
 		if (!$this->customer->isLogged()) {
-			$this->session->data['redirect'] = $this->url->link('account/edit', '', true);
-
-			$this->response->redirect($this->url->link('account/login', '', true));
+			$back_url = '';
+			if(isset($this->request->get['s']) && isset($this->request->get['p'])) {
+			    $this->session->data['online_deposit_sig'] = $this->request->get['s'];
+			    $this->session->data['online_deposit_price'] = $this->request->get['p'];
+                $back_url = 'account/online_deposit';
+			}
+			
+			$this->response->redirect($this->url->link('account/signin', 'backUrl=' . $back_url, true));
 		}
+		
+		unset($this->session->data['online_deposit_sig']);
+		unset($this->session->data['online_deposit_price']);
 
 		$this->load->language('extension/module/online_deposit');
 		$this->document->setTitle($this->language->get('heading_title'));
